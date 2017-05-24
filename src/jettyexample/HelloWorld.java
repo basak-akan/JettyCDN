@@ -28,7 +28,7 @@ public class HelloWorld extends AbstractHandler
 	
 	private MemoryManager memoryImgs = new MemoryManager();
 	private HarddiskManager hardImgs;
-	private BufferedImage sourceFile = null;
+	
 	
     @Override
     public void handle( String target,
@@ -37,17 +37,21 @@ public class HelloWorld extends AbstractHandler
                         HttpServletResponse response ) throws IOException,
                                                       ServletException
     {
+    	
+    	BufferedImage sourceFile = null;
+        HarddiskManager hardImgs = new HarddiskManager(target);
     	Map<String, String[]> map = request.getParameterMap();
     	//MAP KONTROLU
-		if (memoryImgs.hash.containsKey(target)) {
+		if (memoryImgs.isImgExist(target)) {
 			
 			response.setHeader("Content-Type", "image/jpg");
-			ImageIO.write(imgConfig(map,memoryImgs.hash.get(target)), "jpg", response.getOutputStream());
+			ImageIO.write(imgConfig(map,memoryImgs.getImage(target)), "jpg", response.getOutputStream());
 			
 		}
-		sourceFile =ImageIO.read( new File("path+target.jpg"));
-		 if (sourceFile!=null)
+//		sourceFile =ImageIO.read( new File(".\\img\\" + target));
+		 if (hardImgs.isImgExist(target))   
 		{
+			 	sourceFile = hardImgs.getImage(target);
 			 	response.setHeader("Content-Type", "image/jpg");
 				ImageIO.write(imgConfig(map, sourceFile), "jpg", response.getOutputStream());
 				memoryImgs.addMemory(target, sourceFile);
@@ -61,17 +65,11 @@ public class HelloWorld extends AbstractHandler
 			response.setHeader("Content-Type", "image/jpg");
 			ImageIO.write(imgConfig(map,originalImage), "jpg", response.getOutputStream());
 		 
-			memoryImgs.addMemory(target, sourceFile);
-		    hardImgs = new HarddiskManager(target);
+			memoryImgs.addMemory(target, originalImage);
 			hardImgs.saveImage(target);	
 			ImageIO.write(originalImage, "jpg", response.getOutputStream());
-			
-		 }
-		
+		 }		
 	}
-
-
-
 
     public static void main( String[] args ) throws Exception
     {
@@ -101,41 +99,29 @@ public class HelloWorld extends AbstractHandler
 		ImageIO.write(originalImage, "jpg", response.getOutputStream());
 	  
 	} */
-	
 	BufferedImage imgConfig (Map<String, String[]> map, BufferedImage sourceFile) {
-		
-		try {
-
-			if (map.size() == 0) {
-				
+			try {
+					if (map.size() == 0) {	
+						return sourceFile;
+					}
+					else if (map.size() == 1) {
+						// gray işlemi
+						 return new Scalar().toGray(sourceFile);
+						
+					} else if (map.size() == 2) {
+						// scale işlemi
+						return new Scalar().scale(sourceFile,
+								Integer.parseInt(map.get("width")[0]), Integer.parseInt(map.get("height")[0]));
+						
+					} else {
+						// gray&scale
+						return new Scalar().grayAndScale(sourceFile,
+								Integer.parseInt(map.get("width")[0]), Integer.parseInt(map.get("height")[0]));	
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				return sourceFile;
-			}
-
-			else if (map.size() == 1) {
-				// gray işlemi
-				 return new Scalar().toGray(sourceFile);
-				
-
-			} else if (map.size() == 2) {
-				// scale işlemi
-				return new Scalar().scale(sourceFile,
-						Integer.parseInt(map.get("width")[0]), Integer.parseInt(map.get("height")[0]));
-				
-
-			} else {
-				// gray&scale
-
-				return new Scalar().grayAndScale(sourceFile,
-						Integer.parseInt(map.get("width")[0]), Integer.parseInt(map.get("height")[0]));
-				
-			}
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return sourceFile;
-			
 	}
 }
