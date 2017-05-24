@@ -5,7 +5,8 @@ package jettyexample;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
+import java.net.URL;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -18,12 +19,16 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-
+;
 public class HelloWorld extends AbstractHandler
 {
 	
-	public static String uriname= "http://wwww.wallpaperswide.com/downloads"
+	public static String baseURL = "http://wallpaperswide.com/download";
+//	private Hashtable<String, BufferedImage> imgList = new Hashtable<String, BufferedImage>();
 	
+	private MemoryManager memoryImgs = new MemoryManager();
+	private HarddiskManager hardImgs;
+	private BufferedImage sourceFile = null;
 	
     @Override
     public void handle( String target,
@@ -32,82 +37,41 @@ public class HelloWorld extends AbstractHandler
                         HttpServletResponse response ) throws IOException,
                                                       ServletException
     {
-    	
-    	System.out.println("main " + target);
-       
-    	
-		System.out.println(request.getRequestURI());
-		String localPath = request.getRequestURI();
-		String path="."+localPath;
-		// sendImage("." + localPath, response);
-		// Enumeration<String> parametersNames = request.getParameterNames();
-		Map<String,String[]> map =request.getParameterMap();
-		System.out.println(map.size());
-		
-		String newName;
-		try {
-			if (map.containsKey("color")&&map.get("color")[0].equals("gray"))//map.size() == 1
-			 {
-				if (map.size()==3&&map.containsKey("width")&&map.containsKey("height"))
-				{
-					newName = "gray" + (map.get("width"))[0] + "x" + (map.get("height"))[0] + target.substring(1);
-					path = new Scalar().toGray(new Scalar().scale("." + localPath, Integer.parseInt(map.get("width")[0]),
-									Integer.parseInt(map.get("height")[0]), target.substring(1)), newName);
-				}
-				else if (map.size()==1)
-				{
-					newName = "gray" + target.substring(1);
-					path = new Scalar().toGray("." + localPath, newName);
-				}
-				
-				//System.getProperty("user.dir");
-				//System.out.println("1 "+ path);
-			 }
-			 else if (map.size()==2&&map.containsKey("width")&&map.containsKey("height"))
-			 {
-				 newName = (map.get("width"))[0] + "x" + (map.get("height"))[0] + target.substring(1) ;
-				path = new Scalar().scale("." + localPath, Integer.parseInt((map.get("width"))[0]),
-						Integer.parseInt((map.get("height"))[0]), newName  );
-				//System.out.println("2 "+ path);
-			 }
-			System.out.println(path);
-			sendImage(path, response);
-			} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+    	Map<String, String[]> map = request.getParameterMap();
+    	//MAP KONTROLU
+		if (memoryImgs.hash.containsKey(target)) {
+			
+			response.setHeader("Content-Type", "image/jpg");
+			ImageIO.write(imgConfig(map,memoryImgs.hash.get(target)), "jpg", response.getOutputStream());
+			
 		}
-        
-        
-        
-      //  response.getWriter().write("<h1>İkinci resim</h1>");
-      //  response.getWriter().write("<img src=\"http://kpssdelisi.com/doga-resimleri1/9.jpg\"></img>"); */
-        
-/*        File file = new File("/home/basak/Desktop/Merhaba");
-        BufferedReader reader = null;
-        reader = new BufferedReader(new FileReader(file));
-        String satir = reader.readLine();
- 
-            while (satir!=null) {
-                response.getWriter().write(satir);
-                satir = reader.readLine();
-            }
-            reader.close(); */
-            
-    	
-    	
-		// resim dosyası gonderme
-    	
-            		
-           
-        // Inform jetty that this request has now been handled
- //   	response.sendRedirect("http://www.google.com");
-    	
- //   	response.setStatus(HttpStatus.FORBIDDEN_403); // Buradaki hata kodları son kullanıcı için değildir browser içindir. 
-    	
-     //   baseRequest.setHandled(true);
+		sourceFile =ImageIO.read( new File("path+target.jpg"));
+		 if (sourceFile!=null)
+		{
+			 	response.setHeader("Content-Type", "image/jpg");
+				ImageIO.write(imgConfig(map, sourceFile), "jpg", response.getOutputStream());
+				memoryImgs.addMemory(target, sourceFile);
+				
+		}// else ?? file için nasıl kontrolleri bastan yapcez
+		 else {
+			 
+			URL url = new URL(baseURL+target);
+			BufferedImage originalImage = ImageIO.read(url.openStream());
+			
+			response.setHeader("Content-Type", "image/jpg");
+			ImageIO.write(imgConfig(map,originalImage), "jpg", response.getOutputStream());
+		 
+			memoryImgs.addMemory(target, sourceFile);
+		    hardImgs = new HarddiskManager(target);
+			hardImgs.saveImage(target);	
+			ImageIO.write(originalImage, "jpg", response.getOutputStream());
+			
+		 }
 		
-		
-    }
+	}
+
+
+
 
     public static void main( String[] args ) throws Exception
     {
@@ -125,23 +89,53 @@ public class HelloWorld extends AbstractHandler
         server.join();
     }
 
-	void sendImage(String path, HttpServletResponse response) throws IOException 
+	/*void sendImage(String path, HttpServletResponse response) throws IOException 
 	{
 		BufferedImage bufferedImage = ImageIO.read(new File(path));
 		System.out.println("send image" + path);
 		response.setHeader("Content-Type", "image/jpg");// or png or gif, etc
 		ImageIO.write(bufferedImage, "jpg", response.getOutputStream());
-	 
+		///////////////// en son olcak iş
+		URL url = new URL(baseURL);
+		BufferedImage originalImage = ImageIO.read(url.openStream());
+		ImageIO.write(originalImage, "jpg", response.getOutputStream());
+	  
+	} */
+	
+	BufferedImage imgConfig (Map<String, String[]> map, BufferedImage sourceFile) {
+		
+		try {
+
+			if (map.size() == 0) {
+				
+				return sourceFile;
+			}
+
+			else if (map.size() == 1) {
+				// gray işlemi
+				 return new Scalar().toGray(sourceFile);
+				
+
+			} else if (map.size() == 2) {
+				// scale işlemi
+				return new Scalar().scale(sourceFile,
+						Integer.parseInt(map.get("width")[0]), Integer.parseInt(map.get("height")[0]));
+				
+
+			} else {
+				// gray&scale
+
+				return new Scalar().grayAndScale(sourceFile,
+						Integer.parseInt(map.get("width")[0]), Integer.parseInt(map.get("height")[0]));
+				
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return sourceFile;
+			
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }
