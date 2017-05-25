@@ -8,7 +8,7 @@ import javax.imageio.ImageIO;
 
 public class HarddiskManager {
 
-	private String baseLocation = ".\\img\\";
+	private String baseLocation = "/home/basak/Desktop/CdnProject-master/JettyCDN-master/img";
 	private String filename;
 
 	public HarddiskManager(String filename) {
@@ -16,6 +16,8 @@ public class HarddiskManager {
 	}
 
 	public boolean isImgExist(String filename) {
+		System.out.println(baseLocation + filename);
+		System.out.println(new File(baseLocation + filename).exists());
 		return new File(baseLocation + filename).exists();
 	}
 
@@ -23,8 +25,8 @@ public class HarddiskManager {
 		return ImageIO.read(new File(baseLocation + filename));
 	}
 
-	public void saveImage(String filename) {
-		new File(baseLocation + filename);
+	public void saveImage(String filename, BufferedImage img) throws IOException {
+		 ImageIO.write(img, "jpg", new File(baseLocation + filename));
 	}
 
 }

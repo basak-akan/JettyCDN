@@ -9,7 +9,7 @@ import javax.imageio.ImageIO;
 
 public class MemoryManager {
 
-	private static MemoryCache<String, BufferedImage> cache = new MemoryCache<String, BufferedImage>(1000);
+	private static MemoryCache<String, BufferedImage> cache = new MemoryCache<String, BufferedImage>(500);
 	private static Hashtable<String, Integer> requestFreqTable = new Hashtable<String, Integer>();
 	public static String TUMBNAILS = "./img/france.jpg";
 	public MemoryManager() {
@@ -17,13 +17,16 @@ public class MemoryManager {
 	}
 
 	public boolean isImgExist(String filename) {
+		System.out.println(cache.containsKey(filename));
 		return cache.containsKey(filename);
 	}
 
 	public void addMemory(String filename, BufferedImage img) {
-		if (cache.put(filename, img) != null) {
+		
+		if (cache.put(filename, img) != null) {	
 			requestFreqTable.put(filename, requestFreqTable.get(filename) + 1);
 		} else
+			cache.put(filename, img);
 			requestFreqTable.put(filename, 0);
 
 	}
@@ -33,6 +36,7 @@ public class MemoryManager {
 		
 	}
 
+	
 	public boolean swapFile() {
 		return true;
 	}

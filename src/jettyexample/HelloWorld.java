@@ -23,7 +23,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 public class HelloWorld extends AbstractHandler
 {
 	
-	public static String baseURL = "http://wallpaperswide.com/download";
+	public static String baseURL = "http://wallpaperswide.com/download"; //155.223.26.79:8080   http://wallpaperswide.com/download
 //	private Hashtable<String, BufferedImage> imgList = new Hashtable<String, BufferedImage>();
 	
 	private MemoryManager memoryImgs = new MemoryManager();
@@ -43,7 +43,7 @@ public class HelloWorld extends AbstractHandler
     	Map<String, String[]> map = request.getParameterMap();
     	//MAP KONTROLU
 		if (memoryImgs.isImgExist(target)) {
-			
+		
 			response.setHeader("Content-Type", "image/jpg");
 			ImageIO.write(imgConfig(map,memoryImgs.getImage(target)), "jpg", response.getOutputStream());
 			
@@ -66,7 +66,7 @@ public class HelloWorld extends AbstractHandler
 			ImageIO.write(imgConfig(map,originalImage), "jpg", response.getOutputStream());
 		 
 			memoryImgs.addMemory(target, originalImage);
-			hardImgs.saveImage(target);	
+			hardImgs.saveImage(target, originalImage);	
 			ImageIO.write(originalImage, "jpg", response.getOutputStream());
 		 }		
 	}
@@ -77,10 +77,13 @@ public class HelloWorld extends AbstractHandler
         ResourceHandler fileResourceHandler = new ResourceHandler();
        
         
+       
+       
         ContextHandler context = new ContextHandler();
 	    context.setContextPath("/img");
         
         context.setHandler(new HelloWorld());
+       
         
         server.setHandler(context);
         server.start();

@@ -63,10 +63,10 @@ public class MemoryCache<K, V> implements Map<K, V>, Cloneable, Serializable {
 	@Override
 	public V put(K arg0, V arg1) {
 		// TODO Auto-generated method stub
-		if (size() == maxSize)
-			return null;
+		if (size() < maxSize)
+			return table.put(arg0, arg1);
 		
-		return table.put(arg0, arg1);
+		return null;
 	}
 
 	@Override
